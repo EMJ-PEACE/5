@@ -1,0 +1,167 @@
+---
+
+Program 5
+
+Download Java JDK from Oracle JDK Downloads
+→ Install
+java --version
+
+Download Jenkins from Jenkins Downloads
+→ Download Windows Installer (.msi) → Install
+
+If Jenkins does not start:
+jenkins.exe start
+
+Open browser:
+http://localhost:8080 //whatever port u assign
+
+Open password file:
+C:\ProgramData\Jenkins.jenkins\secrets\initialAdminPassword
+
+Copy password → Paste in browser → Continue
+
+Click:
+Install Suggested Plugins
+
+Create admin account → Save and Continue → Save and Finish → Start using Jenkins
+
+Dashboard → New Item
+
+Enter:
+demo-job
+
+Select:
+Freestyle Project 
+
+
+Build Steps → Add build step → Execute Windows batch command
+
+Add:
+echo Hello Jenkins
+
+Click:
+Build Now
+
+Open build number → Console Output
+
+Expected output:
+Hello Jenkins
+Finished: SUCCESS
+
+
+-------------------------------------------------------------------------------------------------------------------
+Program 6
+-------------------------------------------------------------------------------------------------------------------
+
+Install Java JDK from Oracle JDK Downloads
+Install Maven from Apache Maven
+java --version
+mvn -v
+
+Download SonarQube Community Edition from SonarQube Downloads
+
+Extract ZIP to:
+C:\sonarqube
+
+Go to:
+C:\sonarqube\bin\windows-x86-64
+
+Run:
+StartSonar.bat
+
+Open browser:
+http://localhost:9000
+
+Login:
+Username: admin
+Password: admin
+
+Generate token:
+My Account → Security → Generate Token
+
+Token name:
+sonar-token
+
+Open Jenkins:
+http://localhost:8080 //whatever port u assign
+
+Install plugin:
+Manage Jenkins → Manage Plugins → SonarQube Scanner
+
+Configure SonarQube:
+Manage Jenkins → Configure System
+
+Add:
+Name: SonarQube
+Server URL: http://localhost:9000
+
+Add token:
+Manage Jenkins → Credentials
+
+Kind:
+Secret Text
+
+ID:
+sonar-token
+
+Configure Maven:
+Manage Jenkins → Global Tool Configuration
+
+Add Maven:
+Name: Maven_3
+
+
+Jenkins → New Item
+
+Name:
+sonar-pipeline
+
+Select:
+Pipeline
+
+Paste pipeline script:
+
+pipeline {
+    agent any
+
+    tools {
+        maven 'Maven_3'
+    }
+
+    stages {
+
+        stage('Build') {
+            steps {
+                bat 'mvn org.apache.maven.plugins:maven-archetype-plugin:3.2.1:generate "-DgroupId=com.example" "-DartifactId=demo" "-DarchetypeArtifactId=maven-archetype-quickstart" "-DinteractiveMode=false"'
+
+                dir('demo') {
+                    bat 'mvn clean compile'
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                dir('demo') {
+                    withSonarQubeEnv('SonarQube') {
+                        bat 'mvn sonar:sonar -Dsonar.login=YOUR_SONAR_TOKEN'
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+Replace:
+YOUR_TOKEN
+
+Click:
+Build Now
+
+Expected output:
+BUILD SUCCESS
+ANALYSIS SUCCESSFUL
+
+Open:
+http://localhost:9000
